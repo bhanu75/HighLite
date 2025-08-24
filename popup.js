@@ -392,11 +392,12 @@ class PopupManager {
   }
 }
 
-// Initialize popup when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new PopupManager();
-  });
-} else {
+// Initialize popup immediately
+document.addEventListener('DOMContentLoaded', () => {
+  new PopupManager();
+});
+
+// Fallback initialization
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
   new PopupManager();
 }
