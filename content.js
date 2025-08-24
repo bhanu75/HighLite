@@ -133,17 +133,21 @@ class WebHighlighter {
     };
 
     try {
-      // Save to Chrome storage
-      const result = await chrome.storage.local.get(['highlights']);
-      const highlights = result.highlights || [];
-      highlights.unshift(highlight); // Add to beginning
-      await chrome.storage.local.set({ highlights });
-
-      // Create visual highlight on page
-      this.createVisualHighlight(this.currentSelection.range, highlight.id);
-      
-      this.showSuccessMessage();
-      this.hidePopup();
+      // Check if chrome storage is available
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        const result = await chrome.storage.local.get(['highlights']);
+        const highlights = result.highlights || [];
+        highlights.unshift(highlight);
+        await chrome.storage.local.set({ highlights });
+        
+        // Create visual highlight on page
+        this.createVisualHighlight(this.currentSelection.range, highlight.id);
+        
+        this.showSuccessMessage();
+        this.hidePopup();
+      } else {
+        throw new Error('Chrome storage not available');
+      }
     } catch (error) {
       console.error('Error saving highlight:', error);
       this.showErrorMessage();
@@ -230,11 +234,25 @@ class WebHighlighter {
   }
 }
 
-// Initialize the highlighter
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new WebHighlighter();
-  });
-} else {
-  new WebHighlighter();
+// Initialize the highlighter with proper error handling
+let highlighterInstance = null;
+
+function initializeHighlighter() {
+  try {
+    if (!highlighterInstance) {
+      highlighterInstance = new WebHighlighter();
+    }
+  } catch (error) {
+    console.error('Error initializing Web Highlighter:', error);
+  }
 }
+
+// Multiple initialization methods for reliability
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeHighlighter);
+} else {
+  initializeHighlighter();
+}
+
+// Fallback initialization
+setTimeout(initializeHighlighter, 100);
