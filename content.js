@@ -4,21 +4,41 @@ class WebHighlighter {
     this.isPopupVisible = false;
     this.currentSelection = null;
     this.highlightCounter = 0;
+    this.isInitialized = false;
     this.init();
   }
 
   init() {
-    // Remove any existing event listeners to prevent duplicates
-    document.removeEventListener('mouseup', this.handleMouseUp);
-    document.removeEventListener('mousedown', this.handleMouseDown);
+    // Prevent multiple initializations
+    if (this.isInitialized) return;
+    this.isInitialized = true;
+    
+    // Clean up any existing listeners
+    this.cleanup();
     
     // Add event listeners
-    document.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    document.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    this.boundHandleMouseUp = this.handleMouseUp.bind(this);
+    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
+    this.boundHandleKeyDown = this.handleKeyDown.bind(this);
+    
+    document.addEventListener('mouseup', this.boundHandleMouseUp, true);
+    document.addEventListener('mousedown', this.boundHandleMouseDown, true);
+    document.addEventListener('keydown', this.boundHandleKeyDown, true);
     
     // Load existing highlights
     this.loadExistingHighlights();
+  }
+
+  cleanup() {
+    if (this.boundHandleMouseUp) {
+      document.removeEventListener('mouseup', this.boundHandleMouseUp, true);
+    }
+    if (this.boundHandleMouseDown) {
+      document.removeEventListener('mousedown', this.boundHandleMouseDown, true);
+    }
+    if (this.boundHandleKeyDown) {
+      document.removeEventListener('keydown', this.boundHandleKeyDown, true);
+    }
   }
 
   handleMouseDown = (e) => {
