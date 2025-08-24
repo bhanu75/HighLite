@@ -140,12 +140,20 @@ class BackgroundService {
   }
 
   showNotification(title, message) {
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icons/icon48.png',
-      title: title,
-      message: message
-    });
+    try {
+      if (chrome.notifications && chrome.notifications.create) {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'icons/icon48.png',
+          title: title,
+          message: message
+        });
+      } else {
+        console.log('Notification:', title, '-', message);
+      }
+    } catch (error) {
+      console.log('Notification (fallback):', title, '-', message);
+    }
   }
 
   async generateSummary(highlights) {
