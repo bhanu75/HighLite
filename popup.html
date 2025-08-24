@@ -1,10 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="popup.css">
   <title>Web Highlighter Pro</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      width: 380px;
+      min-height: 500px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2c3e50;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .popup-container {
+      width: 100%;
+      min-height: 500px;
+      background: #ffffff;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    /* Header Styles */
+    .popup-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    #highlightCount {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      color: #ffd700;
+    }
+
+    /* Search Section */
+    .search-section {
+      padding: 20px;
+      background: #f8f9fa;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      margin-bottom: 16px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .filter-tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: white;
+      color: #6c757d;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .filter-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    /* Actions Bar */
+    .actions-bar {
+      padding: 16px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* Highlights Container */
+    .highlights-container {
+      max-height: 300px;
+      overflow-y: auto;
+      background: white;
+    }
+
+    .highlights-list {
+      padding: 20px;
+    }
+
+    .highlight-item {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .highlight-text {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #2c3e50;
+    }
+
+    .highlight-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+      color: #6c757d;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+  </style>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="popup-container">
@@ -26,19 +190,7 @@
 
     <!-- Search and Filter -->
     <div class="search-section">
-      <div class="search-container">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Search highlights..." class="search-input">
-        <button id="clearSearch" class="clear-search" style="display: none;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
+      <input type="text" id="searchInput" placeholder="Search highlights..." class="search-input">
       
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all">All</button>
@@ -49,21 +201,8 @@
 
     <!-- Actions Bar -->
     <div class="actions-bar">
-      <button id="exportBtn" class="action-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7,10 12,15 17,10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Export
-      </button>
-      <button id="clearAllBtn" class="action-btn danger">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3,6 5,6 21,6"></polyline>
-          <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-        </svg>
-        Clear All
-      </button>
+      <button id="exportBtn" class="action-btn">Export</button>
+      <button id="clearAllBtn" class="action-btn">Clear All</button>
     </div>
 
     <!-- Highlights List -->
@@ -72,26 +211,9 @@
       
       <!-- Empty State -->
       <div id="emptyState" class="empty-state">
-        <div class="empty-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-          </svg>
-        </div>
         <h3>No highlights yet</h3>
         <p>Select text on any webpage and click "Save Highlight" to get started!</p>
       </div>
-    </div>
-
-    <!-- AI Summary Section (for future enhancement) -->
-    <div id="aiSummarySection" class="ai-summary-section" style="display: none;">
-      <div class="ai-header">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-        </svg>
-        <span>AI Summary</span>
-        <button id="generateSummary" class="generate-btn">Generate</button>
-      </div>
-      <div id="summaryContent" class="summary-content"></div>
     </div>
   </div>
 
