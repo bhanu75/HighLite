@@ -1,0 +1,167 @@
+/* Web Highlighter Content Styles */
+
+.wh-save-popup {
+  position: absolute;
+  z-index: 999999;
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: whPopupSlideIn 0.2s ease-out;
+}
+
+@keyframes whPopupSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wh-popup-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+}
+
+.wh-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.wh-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.wh-save-btn:active {
+  transform: translateY(0);
+}
+
+.wh-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.wh-cancel-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.wh-highlight {
+  background: linear-gradient(120deg, #ffeaa7 0%, #fdcb6e 100%);
+  color: #2d3436;
+  padding: 1px 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  position: relative;
+}
+
+.wh-highlight:hover {
+  background: linear-gradient(120deg, #fdcb6e 0%, #e17055 100%);
+  color: white;
+}
+
+.wh-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 1px;
+}
+
+/* Success/Error Messages */
+.wh-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000000;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(100px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.wh-message-show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.wh-message-success {
+  background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+  color: white;
+}
+
+.wh-message-error {
+  background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+  color: white;
+}
+
+/* Prevent text selection on UI elements */
+.wh-save-popup,
+.wh-save-popup * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .wh-save-popup {
+    max-width: calc(100vw - 40px);
+  }
+  
+  .wh-save-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+    min-width: 100px;
+  }
+  
+  .wh-message {
+    right: 10px;
+    left: 10px;
+    transform: translateY(-100px);
+  }
+  
+  .wh-message-show {
+    transform: translateY(0);
+  }
+}
