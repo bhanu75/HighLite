@@ -12,8 +12,12 @@ class PopupManager {
   async init() {
     try {
       // Check if chrome APIs are available
-      if (typeof chrome === 'undefined' || !chrome.storage) {
-        throw new Error('Chrome extension APIs not available');
+      if (typeof chrome === 'undefined') {
+        throw new Error('Chrome extension context not available');
+      }
+      
+      if (!chrome.storage) {
+        throw new Error('Chrome storage API not available');
       }
       
       await this.loadHighlights();
@@ -21,9 +25,11 @@ class PopupManager {
       this.renderHighlights();
       this.updateStats();
       this.isInitialized = true;
+      
+      console.log('Popup initialized successfully');
     } catch (error) {
       console.error('Error initializing popup:', error);
-      this.showError('Failed to initialize extension popup');
+      this.showError(`Initialization failed: ${error.message}`);
     }
   }
 
@@ -42,9 +48,28 @@ class PopupManager {
 
   async loadHighlights() {
     try {
-      const result = await chrome.storage.local.get(['highlights']);
+      // Check if chrome storage is available
+      if (!chrome || !chrome.storage || !chrome.storage.local) {
+        console.error('Chrome storage API not available');
+        this.highlights = [];
+        this.filteredHighlights = [];
+        return;
+      }
+
+      // Use Promise wrapper for compatibility
+      const result = await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['highlights'], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(result);
+          }
+        });
+      });
+
       this.highlights = result.highlights || [];
       this.filteredHighlights = [...this.highlights];
+      console.log('Loaded highlights:', this.highlights.length);
     } catch (error) {
       console.error('Error loading highlights:', error);
       this.highlights = [];
@@ -53,55 +78,86 @@ class PopupManager {
   }
 
   setupEventListeners() {
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    const clearSearch = document.getElementById('clearSearch');
-    
-    searchInput.addEventListener('input', (e) => {
-      this.searchQuery = e.target.value.trim();
-      this.applyFilters();
-      this.toggleClearButton();
-    });
-
-    clearSearch.addEventListener('click', () => {
-      searchInput.value = '';
-      this.searchQuery = '';
-      this.applyFilters();
-      this.toggleClearButton();
-    });
-
-    // Filter tabs
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        document.querySelector('.filter-tab.active').classList.remove('active');
-        e.target.classList.add('active');
-        this.currentFilter = e.target.dataset.filter;
-        this.applyFilters();
-      });
-    });
-
-    // Action buttons
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      this.exportHighlights();
-    });
-
-    document.getElementById('clearAllBtn').addEventListener('click', () => {
-      this.clearAllHighlights();
-    });
-
-    // Listen for storage changes
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local' && changes.highlights) {
-        this.highlights = changes.highlights.newValue || [];
-        this.applyFilters();
-        this.updateStats();
+    try {
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      const clearSearch = document.getElementById('clearSearch');
+      
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          this.searchQuery = e.target.value.trim();
+          this.applyFilters();
+          this.toggleClearButton();
+        });
       }
-    });
+
+      if (clearSearch) {
+        clearSearch.addEventListener('click', () => {
+          if (searchInput) {
+            searchInput.value = '';
+            this.searchQuery = '';
+            this.applyFilters();
+            this.toggleClearButton();
+          }
+        });
+      }
+
+      // Filter tabs
+      const filterTabs = document.querySelectorAll('.filter-tab');
+      filterTabs.forEach(tab => {
+        if (tab) {
+          tab.addEventListener('click', (e) => {
+            const activeTab = document.querySelector('.filter-tab.active');
+            if (activeTab) {
+              activeTab.classList.remove('active');
+            }
+            e.target.classList.add('active');
+            this.currentFilter = e.target.dataset.filter;
+            this.applyFilters();
+          });
+        }
+      });
+
+      // Action buttons
+      const exportBtn = document.getElementById('exportBtn');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+      
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          this.exportHighlights();
+        });
+      }
+
+      if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', () => {
+          this.clearAllHighlights();
+        });
+      }
+
+      // Listen for storage changes with error handling
+      try {
+        if (chrome && chrome.storage && chrome.storage.onChanged) {
+          chrome.storage.onChanged.addListener((changes, namespace) => {
+            if (namespace === 'local' && changes.highlights) {
+              this.highlights = changes.highlights.newValue || [];
+              this.applyFilters();
+              this.updateStats();
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error setting up storage listener:', error);
+      }
+    } catch (error) {
+      console.error('Error setting up event listeners:', error);
+    }
   }
 
   toggleClearButton() {
     const clearBtn = document.getElementById('clearSearch');
-    clearBtn.style.display = this.searchQuery ? 'flex' : 'none';
+    if (clearBtn) {
+      clearBtn.style.display = this.searchQuery ? 'flex' : 'none';
+    }
   }
 
   applyFilters() {
@@ -263,8 +319,22 @@ class PopupManager {
 
   async deleteHighlight(highlightId) {
     try {
+      if (!chrome || !chrome.storage || !chrome.storage.local) {
+        throw new Error('Chrome storage not available');
+      }
+
       this.highlights = this.highlights.filter(h => h.id != highlightId);
-      await chrome.storage.local.set({ highlights: this.highlights });
+      
+      await new Promise((resolve, reject) => {
+        chrome.storage.local.set({ highlights: this.highlights }, () => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve();
+          }
+        });
+      });
+
       this.applyFilters();
       this.updateStats();
       this.showToast('Highlight deleted');
@@ -326,7 +396,10 @@ class PopupManager {
   }
 
   updateStats() {
-    document.getElementById('highlightCount').textContent = this.highlights.length;
+    const highlightCount = document.getElementById('highlightCount');
+    if (highlightCount) {
+      highlightCount.textContent = this.highlights.length;
+    }
   }
 
   getTimeAgo(date) {
@@ -392,12 +465,41 @@ class PopupManager {
   }
 }
 
-// Initialize popup immediately
-document.addEventListener('DOMContentLoaded', () => {
-  new PopupManager();
-});
+// Wait for DOM to be fully loaded before initializing
+function initializePopup() {
+  try {
+    // Double check if DOM is ready
+    if (document.readyState === 'loading') {
+      // Wait a bit more
+      setTimeout(initializePopup, 50);
+      return;
+    }
+    
+    // Check if required elements exist
+    const requiredElements = ['highlightsList', 'emptyState', 'highlightCount'];
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+      console.error('Missing required elements:', missingElements);
+      setTimeout(initializePopup, 100);
+      return;
+    }
+    
+    // Initialize the popup manager
+    new PopupManager();
+  } catch (error) {
+    console.error('Error during popup initialization:', error);
+    // Retry after a short delay
+    setTimeout(initializePopup, 200);
+  }
+}
+
+// Multiple initialization attempts
+document.addEventListener('DOMContentLoaded', initializePopup);
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(initializePopup, 10);
+}
 
 // Fallback initialization
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  new PopupManager();
-}
+setTimeout(initializePopup, 500);
