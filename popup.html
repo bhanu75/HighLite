@@ -190,7 +190,10 @@
 
     <!-- Search and Filter -->
     <div class="search-section">
-      <input type="text" id="searchInput" placeholder="Search highlights..." class="search-input">
+      <div style="position: relative; margin-bottom: 16px;">
+        <input type="text" id="searchInput" placeholder="Search highlights..." class="search-input">
+        <button id="clearSearch" style="display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px;">×</button>
+      </div>
       
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all">All</button>
