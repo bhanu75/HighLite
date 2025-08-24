@@ -5,14 +5,39 @@ class PopupManager {
     this.filteredHighlights = [];
     this.currentFilter = 'all';
     this.searchQuery = '';
+    this.isInitialized = false;
     this.init();
   }
 
   async init() {
-    await this.loadHighlights();
-    this.setupEventListeners();
-    this.renderHighlights();
-    this.updateStats();
+    try {
+      // Check if chrome APIs are available
+      if (typeof chrome === 'undefined' || !chrome.storage) {
+        throw new Error('Chrome extension APIs not available');
+      }
+      
+      await this.loadHighlights();
+      this.setupEventListeners();
+      this.renderHighlights();
+      this.updateStats();
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Error initializing popup:', error);
+      this.showError('Failed to initialize extension popup');
+    }
+  }
+
+  showError(message) {
+    const container = document.getElementById('highlightsList');
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #dc3545;">
+          <h3>Error</h3>
+          <p>${message}</p>
+          <p style="font-size: 12px; opacity: 0.7;">Try refreshing the extension</p>
+        </div>
+      `;
+    }
   }
 
   async loadHighlights() {
